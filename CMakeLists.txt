@@ -18,6 +18,7 @@ set(AURORA_ENABLE_CARD ON CACHE BOOL "Enable CARD API support" FORCE)
 add_subdirectory(extern/aurora EXCLUDE_FROM_ALL)
 
 add_subdirectory(libs/freeverb)
+add_subdirectory(src/dusk/randomizer)
 
 option(DUSK_BUILD_WARNINGS "If off, compiler warnings will be suppressed")
 option(DUSK_SELECTED_OPT "If on, selected parts of the project will be compiled with optimizations on Debug, intending to make the game run at 30 FPS. Note for MSVC: you will need to remove '/RTC1' from your debug flags in CMake.")
@@ -94,7 +95,7 @@ message(STATUS "dusk: TP Version: ${DUSK_TP_VERSION}")
 source_group("dolzel" FILES ${DOLZEL_FILES} ${Z2AUDIOLIB_FILES} ${JSYSTEM_FILES} ${JSYSTEM_DEBUG_FILES} ${REL_FILES})
 source_group("dusk" FILES ${DUSK_FILES})
 
-set(GAME_COMPILE_DEFS TARGET_PC WIDESCREEN_SUPPORT=1 AVOID_UB=1 VERSION=0
+set(GAME_COMPILE_DEFS TARGET_PC WIDESCREEN_SUPPORT=1 AVOID_UB=1 VERSION=0 RANDOMIZER_ONLY=${RANDOMIZER_ONLY}
     DUSK_TP_VERSION="${DUSK_TP_VERSION}" DUSK_GAME_NAME="${DUSK_GAME_NAME}" DUSK_GAME_VERSION="${DUSK_GAME_VERSION}")
 
 set(GAME_INCLUDE_DIRS
@@ -160,7 +161,7 @@ target_link_libraries(game PUBLIC ${GAME_LIBS})
 add_executable(dusk src/dusk/main.cpp)
 target_compile_definitions(dusk PRIVATE TARGET_PC AVOID_UB=1 VERSION=0)
 target_include_directories(dusk PRIVATE include)
-target_link_libraries(dusk PRIVATE game aurora::main freeverb)
+target_link_libraries(dusk PRIVATE game aurora::main freeverb randomizer)
 
 add_custom_command(TARGET dusk POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

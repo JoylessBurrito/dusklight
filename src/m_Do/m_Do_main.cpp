@@ -61,6 +61,10 @@
 #include "cxxopts.hpp"
 #include "dusk/config.hpp"
 
+#if RANDOMIZER_ONLY
+#include "dusk/randomizer/randomizer.hpp"
+#endif
+
 // --- GLOBALS ---
 s8 mDoMain::developmentMode = -1;
 OSTime mDoMain::sPowerOnTime;
@@ -279,6 +283,12 @@ static const char* CalculateConfigPath() {
 // PC ENTRY POINT
 // =========================================================================
 int game_main(int argc, char* argv[]) {
+
+    #if RANDOMIZER_ONLY
+    randomizerMain();
+    exit(0);
+    #endif
+        
     dusk::registerSettings();
     dusk::config::FinishRegistration();
 
