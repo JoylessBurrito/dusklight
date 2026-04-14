@@ -380,12 +380,21 @@ public:
     void setArrowNum(u8 i_num) { mArrowNum = i_num; }
     u8 getPachinkoNum() const { return mPachinkoNum; }
     void setPachinkoNum(u8 i_num) { mPachinkoNum = i_num; }
+#if TARGET_PC
+    u8 getAncientDocumentNum() const { return mAncientDocumentNum; }
+    void setAncientDocumentNum(u8 i_num) { mAncientDocumentNum = i_num; }
+#endif
 
     /* 0x0 */ u8 mArrowNum;
     /* 0x1 */ u8 mBombNum[3];
     /* 0x4 */ u8 mBottleNum[4];
     /* 0x8 */ u8 mPachinkoNum;
+#if TARGET_PC
+    /* 0x9 */ u8 mAncientDocumentNum; // Custom Field for Randomizer
+    /* 0x9 */ u8 unk5[2];
+#else
     /* 0x9 */ u8 unk5[3];
+#endif
 };  // Size: 0xC
 
 class dSv_player_item_max_c {

@@ -1660,6 +1660,16 @@ inline void dComIfGs_setPachinkoNum(u8 i_num) {
     g_dComIfG_gameInfo.info.getPlayer().getItemRecord().setPachinkoNum(i_num);
 }
 
+#if TARGET_PC
+inline u8 dComIfGs_getAncientDocumentNum() {
+    return g_dComIfG_gameInfo.info.getPlayer().getItemRecord().getAncientDocumentNum();
+}
+
+inline void dComIfGs_setAncientDocumentNum(u8 i_num) {
+    g_dComIfG_gameInfo.info.getPlayer().getItemRecord().setAncientDocumentNum(i_num);
+}
+#endif
+
 inline u8 dComIfGs_getPachinkoMax() {
     return 50;
 }
