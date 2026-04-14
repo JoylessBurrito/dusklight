@@ -2284,7 +2284,8 @@ int dComIfGd_setShadow(u32 param_0, s8 param_1, J3DModel* param_2, cXyz* param_3
 #if TARGET_PC
 void dComIfGs_setupRandomizerSave() {
     randomizer::Randomizer randomizer;
-    randomizer.Generate();
+    if (randomizer.Generate())
+        throw std::runtime_error("Randomizer Generation Faild");
     auto world = randomizer.GetWorlds()[0].get();
 
     // Set starting flags
