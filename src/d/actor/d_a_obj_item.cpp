@@ -197,10 +197,9 @@ void daItem_c::CreateInit() {
                 break;
             }
         }
-    }
-#else
-    mItemScale.setall(1.0f);
+    } else
 #endif
+    mItemScale.setall(1.0f);
 
     switch (daItem_prm::getType(this)) {
     case TYPE_BOOM_HIT_e:
