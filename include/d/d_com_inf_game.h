@@ -470,6 +470,9 @@ public:
     s8 getNextStageRoomNo() { return mNextStage.getRoomNo(); }
     s8 getNextStageLayer() { return mNextStage.getLayer(); }
     BOOL isEnableNextStage() { return mNextStage.isEnable(); }
+#if TARGET_PC
+    void setEnableNextStage() { return mNextStage.setEnable(); }
+#endif
     void offEnableNextStage() { mNextStage.offEnable(); }
     s8 getNextStageWipe() { return mNextStage.getWipe(); }
     u8 getNextStageWipeSpeed() { return mNextStage.getWipeSpeed(); }
@@ -2541,6 +2544,12 @@ inline BOOL dComIfGp_isEnableNextStage() {
 inline void dComIfGp_offEnableNextStage() {
     g_dComIfG_gameInfo.play.offEnableNextStage();
 }
+
+#if TARGET_PC
+inline void dComIfGp_setEnableNextStage() {
+    g_dComIfG_gameInfo.play.setEnableNextStage();
+}
+#endif
 
 inline s8 dComIfGp_getNextStageWipe() {
     return g_dComIfG_gameInfo.play.getNextStageWipe();

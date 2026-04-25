@@ -23,7 +23,10 @@
 #include "d/actor/d_a_npc_tkc.h"
 #include <cstring>
 
+#if TARGET_PC
 #include "dusk/settings.h"
+#include "dusk/randomizer/game/randomizer_context.hpp"
+#endif
 
 BOOL daAlink_c::checkEventRun() const {
     return dComIfGp_event_runCheck() || checkPlayerDemoMode();
@@ -2535,6 +2538,15 @@ int daAlink_c::procCoGetItemInit() {
     s16 var_r22 = 0;
     BOOL var_r31 = FALSE;
     BOOL var_r30 = FALSE;
+#if TARGET_PC
+    if (randomizer_IsActive()) {
+        // If we are giving a custom item, we want to set mParam0 to 0x100 so that instead of trying to search for an item
+        // actor that doesnt exist we want the game to create one using the item id in mGtItm.
+        if (g_randomizerState.getGiveItemToPlayerStatus() == RandomizerState::ITEM_IN_QUEUE) {
+            mDemo.setParam0(0x100);
+        }
+    }
+#endif
     if (mProcID == PROC_GET_ITEM || mProcID == PROC_INSECT_CATCH ||
         (mProcID == PROC_PREACTION_UNEQUIP && !checkNoUpperAnime()))
     {
@@ -2572,6 +2584,11 @@ int daAlink_c::procCoGetItemInit() {
         } else {
             item_no = dComIfGp_event_getGtItm();
         }
+#if TARGET_PC
+        if (randomizer_IsActive() && g_randomizerState.getGiveItemToPlayerStatus() == RandomizerState::ITEM_IN_QUEUE) {
+            g_randomizerState.setGiveItemToPlayerStatus(RandomizerState::CLEAR_QUEUE);
+        }
+#endif
 
         fpc_ProcID item_partner_id = fopAcM_createItemForPresentDemo(&current.pos, item_no, 0, -1,
                                                               fopAcM_GetRoomNo(this), NULL, NULL);

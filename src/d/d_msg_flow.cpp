@@ -260,6 +260,12 @@ u16 dMsgFlow_c::getEventId(int* oItemId_p) {
     return mEventId;
 }
 
+#if TARGET_PC
+u16 dMsgFlow_c::getEventId() {
+    return mEventId;
+}
+#endif
+
 u32 dMsgFlow_c::getMsgNo() {
     return mMsgNo;
 }
