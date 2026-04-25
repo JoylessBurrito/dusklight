@@ -12063,7 +12063,8 @@ void daAlink_c::itemUnequip(u16 i_itemID, f32 i_playSpeed) {
     u16 anm_id;
     const daAlinkHIO_anm_c* anm_data;
 
-    if (i_itemID == dItemNo_BOOMERANG_e || i_itemID == dItemNo_COPY_ROD_e || i_itemID == dItemNo_KANTERA_e ||
+    if (i_itemID == dItemNo_BOOMERANG_e || i_itemID == dItemNo_COPY_ROD_e ||
+        i_itemID == dItemNo_KANTERA_e || i_itemID == dItemNo_LENS_OF_TRUTH_e ||
         i_itemID == dItemNo_HOOKSHOT_e || checkBottleItem(i_itemID))
     {
         anm_id = dRes_ID_ALANM_BCK_TAKEL_e;
@@ -18230,7 +18231,8 @@ int daAlink_c::execute() {
                 resetUpperAnime(UPPER_2, 5.0f);
             }
 
-            if (mEquipItem == dItemNo_KANTERA_e && checkNoUpperAnime() && !checkKandelaarEquipAnime() &&
+            if ((mEquipItem == dItemNo_KANTERA_e || mEquipItem == dItemNo_LENS_OF_TRUTH_e) &&
+                checkNoUpperAnime() && !checkKandelaarEquipAnime() &&
                 (checkModeFlg(MODE_UNK_1000) || mProcID == PROC_CROUCH))
             {
                 if (checkReinRide()) {
@@ -19271,6 +19273,10 @@ void daAlink_c::shadowDraw() {
 
                 if (checkNoResetFlg2(FLG2_UNK_1)) {
                     dComIfGd_addRealShadow(shadowID, mpKanteraModel);
+                }
+
+                if (mEquipItem == dItemNo_LENS_OF_TRUTH_e) {
+                    dComIfGd_addRealShadow(shadowID, mpGhostLanternModel);
                 }
 
                 if (checkEquipHeavyBoots()) {

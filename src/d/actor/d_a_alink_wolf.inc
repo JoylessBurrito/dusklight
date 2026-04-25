@@ -404,7 +404,7 @@ void daAlink_c::changeLink(int param_0) {
     }
 
     mpKanteraModel = initModelEnv(static_cast<J3DModelData*>(dComIfG_getObjectRes(mArcName, "al_kantera.bmd")), 0);
-    mpGhostLanternModel = initModelEnv(static_cast<J3DModelData*>(dComIfG_getObjectRes(mArcName, "al_bootsH.bmd")), 0);
+    mpGhostLanternModel = initModelEnv(static_cast<J3DModelData*>(dComIfG_getObjectRes(mArcName, "al_ghostlantern.bmd")), 0);
 
     modelData = static_cast<J3DModelData*>(dComIfG_getObjectRes(mArcName, "ef_ktGlow.bmd"));
     mpKanteraGlowModel = initModel(modelData, 0x200);

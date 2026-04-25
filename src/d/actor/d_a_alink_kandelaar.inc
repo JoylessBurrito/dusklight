@@ -173,6 +173,7 @@ int daAlink_c::ghostLanternModelCallBack() {
         f32 scale = JMAFastSqrt(SQUARE(J3DSys::mCurrentMtx[0][0]) + SQUARE(J3DSys::mCurrentMtx[1][0]) + SQUARE(J3DSys::mCurrentMtx[2][0]));
         mDoMtx_stack_c::transS(J3DSys::mCurrentMtx[0][3], J3DSys::mCurrentMtx[1][3], J3DSys::mCurrentMtx[2][3]);
         mDoMtx_stack_c::ZXYrotM(var_r28, var_r29, var_r27);
+        mDoMtx_stack_c::ZXYrotM(0, 0, -16384);
         mDoMtx_stack_c::scaleM(scale, scale, scale);
 
         mpGhostLanternModel->setAnmMtx(1, mDoMtx_stack_c::get());
