@@ -1625,18 +1625,11 @@ fpc_ProcID fopAcM_createItemForBoss(const cXyz* i_pos, int i_itemNo, int i_roomN
     }
 
     if (randomizer_IsActive()) {
-        i_itemNo = verifyProgressiveItem(i_itemNo);
         if (i_itemNo == dItemNo_Randomizer_UTAWA_HEART_e)
         {
             param_8 = 0x9F; // Custom flag used for dungeon heart containers.
         }
-
-        // If we are in Hyrule Field, we want to spawn the goron HP on the ground.
-        if (daAlink_c::checkStageName("F_SP121"))
-        {
-            *const_cast<float*>(&i_pos->y) = -190.f;
-        }
-
+        // Don't use fastCreate for rando since it could take a bit to load the item resource
         return initCreatePlayerItem(i_itemNo, param_8 & 0xFF, i_pos, i_roomNo, i_angle, i_scale);
     } else {
     #endif
