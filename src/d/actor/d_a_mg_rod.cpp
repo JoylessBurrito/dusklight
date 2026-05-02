@@ -25,7 +25,10 @@
 #include <cmath>
 #include <cstring>
 
+#if TARGET_PC
+#include "dusk/randomizer/game/verify_item_functions.h"
 #include "dusk/version.hpp"
+#endif
 
 class dmg_rod_HIO_c : public JORReflexible {
 public:
@@ -4031,6 +4034,17 @@ static void uki_catch(dmg_rod_class* i_this) {
             } else if (mgfish->mCaughtType == MG_CATCH_BIN) {
                 i_this->msgflow.init(actor, 0x139A, 0, NULL);
                 dComIfGs_onEventBit(dSv_event_flag_c::saveBitLabels[468]);
+#if TARGET_PC
+                if (randomizer_IsActive()) {
+                    // In rando, give the player the fishing bottle randomized item. Then save
+                    // the itemId for later since the textbox happens after we've already given the player
+                    // the item. If we didn't save it and the item is progressive, then we get the wrong
+                    // text for the item.
+                    u8 itemId = verifyProgressiveItem(randomizer_getItemAtLocation("Fishing Hole Bottle"));
+                    g_randomizerState.mFishingBottleItemId = itemId;
+                    execItemGet(itemId);
+                } else
+#endif
                 dComIfGs_setEmptyBottle();
             } else if (mgfish->mCaughtType == MG_CATCH_KN) {
                 i_this->msgflow.init(actor, 0x139C, 0, NULL);
@@ -4297,7 +4311,8 @@ static void uki_main(dmg_rod_class* i_this) {
                 }
 
                 if (!dComIfGs_isEventBit(dSv_event_flag_c::saveBitLabels[468])) {
-                    if (cM_rndF(1.0f) <= 0.5f) {
+                    // Always succeed the rng check in rando for fishing bottle
+                    if (cM_rndF(1.0f) <= 0.5f IF_DUSK(|| randomizer_IsActive())) {
                         cXyz bin_pos(6800.0f, 30.0f, -270.0f);
                         bin_pos -= player->current.pos;
 

@@ -511,6 +511,17 @@ int dMsgFlow_c::setNormalMsg(mesg_flow_node* i_flowNode_p, fopAc_ac_c* i_speaker
     inf_p = (BE(u16)*)getMsgDataBlock("INF1");
     msg_no = (inf_p + (var_r29->msg_index) * 10)[10];
 
+#if TARGET_PC
+    if (randomizer_IsActive()) {
+        // If this is the fishing hole bottle message, override it
+        // with the item message for the randomized item
+        if (msg_no == 0x71E && g_randomizerState.mFishingBottleItemId != 0) {
+            msg_no = getItemMessageID(g_randomizerState.mFishingBottleItemId);
+            g_randomizerState.mFishingBottleItemId = 0;
+        }
+    }
+#endif
+
     // "Message Set"
     OS_REPORT("\x1B[44;37mメッセ−ジセット　　　　　　　　　　\x1B[m|:");
 
