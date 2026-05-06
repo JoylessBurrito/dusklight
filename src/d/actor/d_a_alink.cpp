@@ -55,6 +55,13 @@
 #include "res/Object/Alink.h"
 #include <cstring>
 
+#include "dusk/randomizer/game/flags.h"
+#include "dusk/randomizer/game/stages.h"
+
+#if TARGET_PC
+#include "dusk/randomizer/game/tools.h"
+#endif
+
 static int daAlink_Create(fopAc_ac_c* i_this);
 static int daAlink_Delete(daAlink_c* i_this);
 static int daAlink_Execute(daAlink_c* i_this);
@@ -12265,6 +12272,14 @@ BOOL daAlink_c::checkGroundSpecialMode() {
     if (mLinkAcch.ChkGroundHit() && !checkModeFlg(MODE_PLAYER_FLY) && !checkMagneBootsOn() &&
         checkEndResetFlg0(ERFLG0_FORCE_WOLF_CHANGE))
     {
+#if TARGET_PC
+        u8 stage = getStageID();
+        // In rando, don't transform in twilight fog unless we have shadow crystal
+        if (randomizer_IsActive() && !dComIfGs_isEventBit(TRANSFORMING_UNLOCKED) &&
+            (stage == Palace_of_Twilight || stage == Phantom_Zant_1 || stage == Phantom_Zant_2)) {
+            return 0;
+        }
+#endif
         return procCoMetamorphoseInit();
     }
 
