@@ -31,6 +31,7 @@
 
 #if TARGET_PC
 #include "d/d_item.h"
+#include "dusk/randomizer/game/messages.hpp"
 #include "dusk/randomizer/game/stages.h"
 #include "dusk/randomizer/game/tools.h"
 #include "dusk/randomizer/game/verify_item_functions.h"
@@ -639,6 +640,16 @@ void dMsgObject_c::setMessageIndex(u32 revoIndex, u32 param_2, bool param_3) {
             mpRefer->setSelMsgPtr(NULL);
         } else {
             char* my_ptr = (char*) (iVar2 + pMsg->entries[msgIndex].string_offset + 8);
+#if TARGET_PC
+            // This is where the game sets the pointer to the string for message choices.
+            // If any of our custom messages are for message choices, override them here
+            if (randomizer_IsActive()) {
+                auto override = GetTextOverride(groupID, field_0x15c);
+                if (override != NULL) {
+                    my_ptr = override;
+                }
+            }
+#endif
             mpRefer->setSelMsgPtr(my_ptr);
         }
     }
