@@ -219,6 +219,7 @@ private:
     bool mCursorInterpPrevAngular;
     bool mCursorInterpCurrAngular;
     bool mCursorInterpInit;
+    bool mPointerTouchPressHoveredCurrent;
     J2DPicture* mDpadIcon;
 #endif
 };
