@@ -190,7 +190,7 @@ namespace randomizer::seedgen::settings
     class Settings
     {
        public:
-        Settings() = default;
+        Settings();
 
         void InsertSetting(const std::string& settingName, Setting setting);
         void AddStartingItem(const std::string& itemName, const int& count = 1);
@@ -202,6 +202,7 @@ namespace randomizer::seedgen::settings
         const std::list<std::list<std::string>>& GetMixedEntrancePools() const { return this->_mixedEntrancePools; }
         std::map<std::string, int>& GetModifiableStartingInventory() { return this->_startingInventory; }
         std::set<std::string>& GetModifiableExcludedLocations() { return this->_excludedLocations; }
+        std::list<std::list<std::string>>& GetModifiableMixedEntrancePools() { return this->_mixedEntrancePools; }
 
        private:
         std::map<std::string, Setting> _map = {};
