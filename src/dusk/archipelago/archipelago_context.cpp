@@ -257,12 +257,24 @@ void ArchipelagoContext::GetSeedDirectoryPath(std::filesystem::path& outPath) {
     }
 }
 
-void ArchipelagoContext::ConnectToServer() {
+bool ArchipelagoContext::IsSeedHashArchipelago(const std::string& seedStr) {
+    return seedStr.starts_with("AP_");
+}
+
+bool ArchipelagoContext::IsCurrentSeedHash(const std::string& seedStr) {
+    return GetArchipelagoSeedName() == seedStr;
+}
+
+bool ArchipelagoContext::ConnectToServer(bool isBlocking) {
     config::Save();
 
     instance().LoadTempItemInfo();
 
     instance().LoadTempLocationInfo();
+
+    AP_SetLogCallback([](const std::string& msg) {
+       DuskLog.info("{}", msg);
+    });
 
     AP_Init(GetServerIp().c_str(), "Twilight Princess", GetSlotName().c_str(), GetPassword().c_str());
 
@@ -291,21 +303,29 @@ void ArchipelagoContext::ConnectToServer() {
 
     AP_Start();
 
-    if (AP_GetConnectionStatus() == AP_ConnectionStatus::ConnectionRefused) {
-        DuskLog.warn("Failed to Connect to Archipelago Server.");
-        return;
+    // above func spawns a websocket thread, but there isn't really a good way to ensure a connection
+    // attempt has been made except to wait for that thread to tick once
+
+    if (isBlocking) {
+        // wait for ws thread to run a frame before checking for status
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        while (AP_GetConnectionStatus() == AP_ConnectionStatus::Connecting)
+            std::this_thread::yield();
+
+        if (!IsConnected()) {
+            DuskLog.error("Failed to connect to Archipelago Server!");
+            return false;
+        }
     }
 
     std::thread messageThread = std::thread(MessageThreadFunc);
     messageThread.detach();
+
+    return true;
 }
 
 void ArchipelagoContext::DisconnectFromServer() {
-    if (!IsConnected()) {
-        DuskLog.warn("Attempted to disconnect from an already disconnected state!");
-        return;
-    }
-
     AP_Shutdown();
 }
 
@@ -522,7 +542,7 @@ bool ArchipelagoContext::IsLocationChecked(int locId) {
 
 void ArchipelagoContext::SetLocationChecked(int locId, bool collected) {
     // func was ran before location scouts could be sent out, cache result until scouts return.
-    if (instance().m_locationItemInfo.empty()) {
+    if (!IsReceivedLocationScouts()) {
         instance().m_initLocationCollectState[locId] = collected;
         return;
     }
@@ -573,6 +593,10 @@ void ArchipelagoContext::UpdateAllLocationState() {
 
         setLocationCollected(location, locInfo.collected);
     }
+}
+
+bool ArchipelagoContext::IsReceivedLocationScouts() {
+    return !instance().m_locationItemInfo.empty();
 }
 
 void ArchipelagoContext::RequestAllLocationScout(bool isHint) {

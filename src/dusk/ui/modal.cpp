@@ -133,4 +133,67 @@ void TextInputModal::update() {
     Document::update();
 }
 
+MultiTextInputModal::MultiTextInputModal(Props props) : Modal(props) {}
+
+void MultiTextInputModal::add_input_text(const Rml::String& label, const Rml::String& startValue) {
+    auto modalBody = mDialog->QuerySelector(".modal-body");
+
+    bool isFirst = mInputs.empty();
+
+    mInputs.push_back(InputEntry {});
+    auto& entry = mInputs.back();
+    int idx = mInputs.size() - 1;
+
+    entry.text = startValue;
+    entry.button = std::make_unique<StringButton>(modalBody, StringButton::Props{
+        .key = label,
+        .getValue = [idx, this]{return mInputs[idx].text;},
+        .setValue = [idx, this](Rml::String value) { mInputs[idx].text = value; },
+    });
+
+    if (isFirst)
+        entry.button->start_editing();
+}
+
+bool MultiTextInputModal::handle_nav_command(Rml::Event& event, NavCommand cmd) {
+    auto retVal = Modal::handle_nav_command(event, cmd);
+    if (!retVal) {
+        if (cmd == NavCommand::Down) {
+            if (mTextSelIdx < mInputs.size()) {
+                mTextSelIdx++;
+                if (mTextSelIdx >= mInputs.size()) {
+                    mButtons[0]->focus();
+                }else {
+                    mInputs[mTextSelIdx].button->focus();
+                }
+            }else {
+                mTextSelIdx = 0;
+                mInputs[mTextSelIdx].button->focus();
+            }
+
+            mDoAud_seStartMenu(kSoundItemFocus);
+            retVal = true;
+        }else if (cmd == NavCommand::Up && mTextSelIdx >= 0) {
+            mTextSelIdx--;
+            if (mTextSelIdx < 0) {
+                mTextSelIdx = mInputs.size();
+                mButtons[0]->focus();
+            }else {
+                mInputs[mTextSelIdx].button->focus();
+            }
+
+            mDoAud_seStartMenu(kSoundItemFocus);
+            retVal = true;
+        }
+    }
+
+    return retVal;
+}
+
+void MultiTextInputModal::update() {
+    for (const auto& input : mInputs) {
+        input.button->update();
+    }
+    Modal::update();
+}
 }  // namespace dusk::ui

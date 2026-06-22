@@ -205,6 +205,7 @@ public:
         DATASELPROC_SELECT_DATA_NAME_MOVE,
 #if TARGET_PC
         DATASELPROC_SELECT_DATA_PLAY_MOVE, // Select between vanilla or randomizer play
+        DATASELPROC_MENU_ARCHIPELAGO_CONNECT, // Wait for archipelago to connect
 #endif
         DATASELPROC_SELECT_DATA_OPENERASE_MOVE,
         DATASELPROC_MENU_SELECT,
@@ -336,6 +337,7 @@ public:
     void selectDataNameMove();
 #if TARGET_PC
     void selectDataPlayTypeMove();
+    void menuArchipelagoConnect();
 #endif
     void selectDataOpenEraseMove();
     void menuSelect();
@@ -742,6 +744,8 @@ public:
         dDlst_FileSelFade_c mFadeDlst;
         bool mStartNameAnm;
         bool mBackToFileSelect;
+        bool mArchipelagoBeginConnect;
+        bool mArchiStartCloseFile;
         int mPendingRmlCloseFrames{0};
     } mDusk;
 #endif

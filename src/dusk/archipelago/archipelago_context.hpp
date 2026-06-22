@@ -74,9 +74,13 @@ namespace dusk::archi
 
         static void GetSeedDirectoryPath(std::filesystem::path& outPath);
 
+        static bool IsSeedHashArchipelago(const std::string& seedStr);
+
+        static bool IsCurrentSeedHash(const std::string& seedStr);
+
         // Connection Handlers
 
-        static void ConnectToServer();
+        static bool ConnectToServer(bool isBlocking = false);
 
         static void DisconnectFromServer();
 
@@ -105,6 +109,8 @@ namespace dusk::archi
         static void UpdateLocationState(int locId, bool collected);
 
         static void UpdateAllLocationState();
+
+        static bool IsReceivedLocationScouts();
 
         // State Requesters
 

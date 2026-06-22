@@ -1540,6 +1540,8 @@ set(DUSK_FILES
         src/dusk/ui/rando_config.hpp
         src/dusk/ui/rando_seed_generation.cpp
         src/dusk/ui/rando_seed_generation.hpp
+        src/dusk/ui/archi_connect_modal.cpp
+        src/dusk/ui/archi_connect_modal.hpp
         src/dusk/achievements.cpp
         src/dusk/iso_validate.cpp
         src/dusk/livesplit.cpp

@@ -53,4 +53,27 @@ private:
     Rml::String mInputText{};
 };
 
+class MultiTextInputModal : public Modal {
+public:
+    explicit MultiTextInputModal(Props props);
+
+    void add_input_text(const Rml::String& label, const Rml::String& startValue = "");
+
+    Rml::String get_input_text(int idx) {return mInputs[idx].text; }
+
+    void update() override;
+
+protected:
+    bool handle_nav_command(Rml::Event& event, NavCommand cmd) override;
+private:
+    struct InputEntry {
+        std::unique_ptr<StringButton> button;
+        Rml::String text;
+    };
+
+    std::vector<InputEntry> mInputs{};
+    int mTextSelIdx = 0;
+};
+
+
 }  // namespace dusk::ui

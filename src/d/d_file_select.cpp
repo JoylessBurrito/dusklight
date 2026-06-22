@@ -24,6 +24,7 @@
 #include <cstring>
 
 #include "dusk/archipelago/archipelago_context.hpp"
+#include "dusk/ui/archi_connect_modal.hpp"
 
 #if TARGET_PC
 #include "dusk/config.hpp"
@@ -301,6 +302,7 @@ static DataSelProcFunc DataSelProc[] = {
     &dFile_select_c::selectDataNameMove,
 #if TARGET_PC
     &dFile_select_c::selectDataPlayTypeMove,
+    &dFile_select_c::menuArchipelagoConnect,
 #endif
     &dFile_select_c::selectDataOpenEraseMove,
     &dFile_select_c::menuSelect,
@@ -1032,34 +1034,75 @@ void dFile_select_c::dataSelectStart() {
         ketteiTxtDispAnmInit(0);
         #endif
 
+#if TARGET_PC
+        headerTxtSet(msgTbl[mSelectNum], 1, 0);
+        makeRecInfo(mSelectNum);
+
+        // Load the randomizer seed if one is tied to this file
+        auto curFileSeedHash = dusk::getSettings().randomizer.seedHashes.at(mSelectNum).getValue();
+        // If this is a vanilla file, clear rando data structures
+        if (curFileSeedHash.empty()) {
+            g_randomizerState = RandomizerState();
+            randomizer_GetContext() = RandomizerContext();
+            mDataSelProc = DATASELPROC_SELECT_DATA_OPEN_MOVE;
+
+            // ensure archipelago is not connected either
+            if (dusk::archi::ArchipelagoContext::IsConnected())
+                dusk::archi::ArchipelagoContext::DisconnectFromServer();
+
+            selectDataMoveAnmInitSet(SelOpenStartFrameTbl[mSelectNum], SelOpenEndFrameTbl[mSelectNum]);
+            menuMoveAnmInitSet(799, 809);
+            selectWakuAlpahAnmInit(mSelectNum, 0xff, 0, g_fsHIO.select_box_appear_frames);
+        }
+        else if (dusk::archi::ArchipelagoContext::IsSeedHashArchipelago(curFileSeedHash)) {
+            if (dusk::archi::ArchipelagoContext::IsConnected()) {
+                // if connected, we need to check if we're already connected to the right slot/seed,
+                // if so, we can continue straight to file start, otherwise a disconnect must happen first.
+                if (!dusk::archi::ArchipelagoContext::IsCurrentSeedHash(curFileSeedHash)) {
+                    mDataSelProc = DATASELPROC_MENU_ARCHIPELAGO_CONNECT;
+                    mDusk.mArchipelagoBeginConnect = true;
+                    mDusk.mArchiStartCloseFile = false;
+                }else {
+                    mDataSelProc = DATASELPROC_SELECT_DATA_OPEN_MOVE;
+
+                    selectDataMoveAnmInitSet(SelOpenStartFrameTbl[mSelectNum], SelOpenEndFrameTbl[mSelectNum]);
+                    menuMoveAnmInitSet(799, 809);
+                    selectWakuAlpahAnmInit(mSelectNum, 0xff, 0, g_fsHIO.select_box_appear_frames);
+                }
+            }else {
+                mDataSelProc = DATASELPROC_MENU_ARCHIPELAGO_CONNECT;
+                mDusk.mArchipelagoBeginConnect = true;
+                mDusk.mArchiStartCloseFile = false;
+            }
+        }else {
+            // Reset randomizer state if we're switching to a different file
+            if (curFileSeedHash != randomizer_GetContext().mHash || g_randomizerState.mFileNum != mSelectNum) {
+                g_randomizerState = RandomizerState();
+                randomizer_GetContext() = RandomizerContext();
+                randomizer_GetContext().LoadFromHash(curFileSeedHash);
+            }
+
+            // disconnect from archipelago if applicable
+            if (dusk::archi::ArchipelagoContext::IsConnected())
+                dusk::archi::ArchipelagoContext::DisconnectFromServer();
+
+            selectDataMoveAnmInitSet(SelOpenStartFrameTbl[mSelectNum], SelOpenEndFrameTbl[mSelectNum]);
+            menuMoveAnmInitSet(799, 809);
+            selectWakuAlpahAnmInit(mSelectNum, 0xff, 0, g_fsHIO.select_box_appear_frames);
+
+            mDataSelProc = DATASELPROC_SELECT_DATA_OPEN_MOVE;
+        }
+#else
+
         headerTxtSet(msgTbl[mSelectNum], 1, 0);
         selectDataMoveAnmInitSet(SelOpenStartFrameTbl[mSelectNum], SelOpenEndFrameTbl[mSelectNum]);
         menuMoveAnmInitSet(799, 809);
         selectWakuAlpahAnmInit(mSelectNum, 0xff, 0, g_fsHIO.select_box_appear_frames);
         makeRecInfo(mSelectNum);
 
-#if TARGET_PC
-        // TODO: not this please D:
-        if (dusk::archi::ArchipelagoContext::IsConnected()) {
-            dusk::archi::ArchipelagoContext::GenerateLocalWorldData();
-        }else {
-            // Load the randomizer seed if one is tied to this file
-            auto curFileSeedHash = dusk::getSettings().randomizer.seedHashes.at(mSelectNum).getValue();
-            // If this is a vanilla file, clear rando data structures
-            if (curFileSeedHash.empty()) {
-                g_randomizerState = RandomizerState();
-                randomizer_GetContext() = RandomizerContext();
-            }
-            // Reset randomizer state if we're switching to a different file
-            else if (curFileSeedHash != randomizer_GetContext().mHash || g_randomizerState.mFileNum != mSelectNum) {
-                g_randomizerState = RandomizerState();
-                randomizer_GetContext() = RandomizerContext();
-                randomizer_GetContext().LoadFromHash(curFileSeedHash);
-            }
-        }
+        mDataSelProc = DATASELPROC_SELECT_DATA_OPEN_MOVE;
 #endif
 
-        mDataSelProc = DATASELPROC_SELECT_DATA_OPEN_MOVE;
     }
 
     modoruTxtDispAnmInit(1);
@@ -1352,10 +1395,6 @@ void dFile_select_c::selectDataNameMove() {
 // Custom Proc to allow the player to select the play type and a randomizer seed
 // Initially copied and expanded upon from dFile_select_c::selectDataNameMove
 void dFile_select_c::selectDataPlayTypeMove() {
-    bool isHeaderTxtChange = headerTxtChangeAnm();
-    bool isFileRecScale = fileRecScaleAnm2();
-    bool isModoruTxtDisp = modoruTxtDispAnm();
-
     // If we want to start bringing in the name input
     if (mDusk.mStartNameAnm) {
         // Only do so when no documents are visible
@@ -1383,8 +1422,8 @@ void dFile_select_c::selectDataPlayTypeMove() {
         }
     }
     // If the file select elements have disappeared, setup the play type modal
-    else if (isHeaderTxtChange == true && isFileRecScale == true &&
-        isModoruTxtDisp == true)
+    else if (headerTxtChangeAnm() == true && fileRecScaleAnm2() == true &&
+        modoruTxtDispAnm() == true)
     {
         // Push our modal for selecting the play type
         auto& playTypeModal = dusk::ui::push_document(std::make_unique<dusk::ui::Modal>(dusk::ui::Modal::Props{
@@ -1415,7 +1454,7 @@ void dFile_select_c::selectDataPlayTypeMove() {
                     mDusk.mBackToFileSelect = false;
                     mDoAud_seStartMenu(Z2SE_SY_CURSOR_OK);
                     modal.hide(true);
-                    dusk::archi::ArchipelagoContext::GenerateLocalWorldData();
+                    dusk::ui::BeginArchipelagoConnectionUI(true);
                 }},
             },
             // If we dismiss this modal, go back to file selection
@@ -1440,6 +1479,35 @@ void dFile_select_c::selectDataPlayTypeMove() {
         mNameBasePane->hide();
 
         playTypeModal.focus();
+    }
+}
+
+void dFile_select_c::menuArchipelagoConnect() {
+    if (mDusk.mArchipelagoBeginConnect) {
+        dusk::ui::BeginArchipelagoConnectionUI();
+        mDusk.mArchipelagoBeginConnect = false;
+        mDusk.mPendingRmlCloseFrames = 6;
+    }else if (mDusk.mArchiStartCloseFile) {
+        bool isHeaderTxtChange = headerTxtChangeAnm();
+        bool isSelDataMove = selectDataMoveAnm();
+        bool isKetteiTxtDisp = ketteiTxtDispAnm();
+
+        if (isHeaderTxtChange && isSelDataMove && isKetteiTxtDisp) {
+            mDataSelProc = DATASELPROC_SELECT_DATA_OPEN_MOVE;
+            mDusk.mArchipelagoBeginConnect = false;
+            mDusk.mArchiStartCloseFile = false;
+        }
+    }else if (!dusk::ui::any_document_visible()) {
+        if (mDusk.mPendingRmlCloseFrames > 0) {
+            mDusk.mPendingRmlCloseFrames -= 1;
+        }
+        if (mDusk.mPendingRmlCloseFrames == 0) {
+            mDusk.mArchiStartCloseFile = true;
+
+            selectDataMoveAnmInitSet(SelOpenStartFrameTbl[mSelectNum], SelOpenEndFrameTbl[mSelectNum]);
+            menuMoveAnmInitSet(799, 809);
+            selectWakuAlpahAnmInit(mSelectNum, 0xff, 0, g_fsHIO.select_box_appear_frames);
+        }
     }
 }
 #endif
