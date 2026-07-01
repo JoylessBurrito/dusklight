@@ -30,6 +30,10 @@
 #include "dusk/math.h"
 #endif
 
+#if DUSK_TPHD
+#include "dusk/tphd/HdAssetLayer.hpp"
+#endif
+
 #if DEBUG
 //#pragma nosyminline on
 #endif
@@ -1205,6 +1209,10 @@ void dPa_control_c::createCommon(void const* param_0) {
     mHeap = mDoExt_createSolidHeapFromSystem(0, 0);
     JKRHEAP_NAME(mHeap, "dPa_control_c::mHeap");
     JUT_ASSERT(2518, mHeap != NULL);
+#if DUSK_TPHD
+    dusk::tphd::register_hd_particle_textures("common-r", (void*)param_0,
+                                              m_resHeap->getSize((void*)param_0));
+#endif
     mCommonResMng = JKR_NEW_ARGS (mHeap, 0) JPAResourceManager(param_0, mHeap);
     JUT_ASSERT(2521, mCommonResMng != NULL);
     mCommonResMng->swapTexture(mDoGph_gInf_c::getFrameBufferTimg(), "dummy");
@@ -1231,6 +1239,13 @@ void dPa_control_c::createRoomScene() {
     mSceneHeap = mDoExt_createSolidHeapFromGame(0, 0);
     JKRHEAP_NAME(mSceneHeap, "dPa_control_c::mSceneHeap");
     JUT_ASSERT(2573, mSceneHeap != NULL);
+#if DUSK_TPHD
+    {
+        char stem[16];
+        std::snprintf(stem, sizeof(stem), "Pscene%03u", static_cast<unsigned>(field_0x18));
+        dusk::tphd::register_hd_particle_textures(stem, m_sceneRes, m_resHeap->getSize(m_sceneRes));
+    }
+#endif
     mSceneResMng = JKR_NEW_ARGS (mSceneHeap, 0) JPAResourceManager(m_sceneRes, mSceneHeap);
     JUT_ASSERT(2576, mSceneResMng != NULL);
     mSceneResMng->swapTexture(mDoGph_gInf_c::getFrameBufferTimg(), "dummy");

@@ -30,6 +30,9 @@ void register_mounted_hd_archive(s32 entryNum, void* arcBytes, size_t arcSize);
 void register_copied_hd_resource(s32 entryNum, std::string_view resourceName, void* buffer,
                                  size_t resourceSize);
 
+// Register HD particle textures which live in a loose `tex/Particle/<jpcStem>.jpc.gtx.gz` sidecar
+void register_hd_particle_textures(std::string_view jpcStem, void* jpcBuffer, size_t jpcSize);
+
 // Returns bytes remaining in a registered HD archive range that contains ptr.
 // Used for debug heap accounting because some HD buffers are not JKR-owned.
 std::optional<size_t> find_registered_hd_archive_remaining(const void* ptr);

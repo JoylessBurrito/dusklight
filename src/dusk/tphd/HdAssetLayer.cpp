@@ -476,6 +476,14 @@ void registerHdSurface(const Gx2FormatMapping& m, const GtxSurface& s,
     }
 }
 
+void applyTimgAttributes(ResTIMG* timg, const GtxSurface& s, s32 imageOffset) {
+    timg->imageOffset = imageOffset;
+    const u8 hdMips = static_cast<u8>(std::clamp<u32>(s.mipCount, 1u, 11u));
+    timg->mipmapCount = hdMips;
+    timg->maxLOD = static_cast<s8>((hdMips - 1) * 8);
+    timg->maxAnisotropy = GX_ANISO_4;
+}
+
 bool register_hd_bti_replacement_for_buffer(const TphdPack& pack, std::string_view resourceName,
     void* buffer, size_t resourceSize, bool replaceExistingPointer) {
     if (buffer == nullptr || resourceSize < 0x20 || !endsWithSuffixCI(resourceName, ".bti")) {
@@ -503,10 +511,7 @@ bool register_hd_bti_replacement_for_buffer(const TphdPack& pack, std::string_vi
     }
 
     auto* timg = reinterpret_cast<ResTIMG*>(buffer);
-    timg->imageOffset = 0x20;
-    const u8 hdMips = static_cast<u8>(std::clamp<u32>(s.mipCount, 1u, 11u));
-    timg->mipmapCount = hdMips;
-    timg->maxLOD = static_cast<s8>((hdMips - 1) * 8);
+    applyTimgAttributes(timg, s, 0x20);
     registerHdSurface(*m, s, static_cast<u8*>(buffer) + 0x20, gtx->name, 0, replaceExistingPointer);
     return true;
 }
@@ -572,11 +577,7 @@ size_t register_hd_bmd_textures_for_buffer(const TphdPack& pack, std::string_vie
         }
 
         const u32 newImgOff = 0x20 + i * 0x20;
-        timg->imageOffset = static_cast<s32>(newImgOff);
-        const u8 hdMips = static_cast<u8>(std::clamp<u32>(s.mipCount, 1u, 11u));
-        timg->mipmapCount = hdMips;
-        timg->maxLOD = static_cast<s8>((hdMips - 1) * 8);
-        timg->maxAnisotropy = GX_ANISO_4;
+        applyTimgAttributes(timg, s, static_cast<s32>(newImgOff));
         registerHdSurface(*m, s, bmdBytes.data() + btiAbs + newImgOff, gtx->name, i,
                           replaceExistingPointer);
         ++reg;
@@ -892,6 +893,50 @@ void rebuild_hd_overlay_locked() {
                overlayFiles.size(), g_contentPath.string());
 }
 
+}
+
+void register_hd_particle_textures(std::string_view jpcStem, void* jpcBuffer, size_t jpcSize) {
+    if (g_contentPath.empty() || jpcBuffer == nullptr || jpcSize < 0x10) return;
+    auto* jpc = static_cast<u8*>(jpcBuffer);
+    if (std::memcmp(jpc, "JPAC2-10", 8) != 0) return;
+
+    const std::filesystem::path sidecar =
+        g_contentPath / "tex" / "Particle" / (std::string(jpcStem) + ".jpc.gtx.gz");
+    auto gz = read_file(sidecar);
+    if (!gz) return;
+    auto gfx2 = decompressGzip(*gz);
+    if (!gfx2) return;
+    auto surfaces = parseGtx(*gfx2);
+    if (surfaces.empty()) return;
+
+    // JPAC2-10 header: texture count @ +0x0A (BE u16), texture table @ +0x0C (BE u32).
+    const u32 texCnt = *reinterpret_cast<const BE(u16)*>(jpc + 0x0A);
+    const u32 texTableOff = *reinterpret_cast<const BE(u32)*>(jpc + 0x0C);
+    if (texCnt != surfaces.size()) {
+        HdLog.warn("HD particle {}: jpc texCnt {} != sidecar surfaces {} -> skip",
+                   jpcStem, texCnt, surfaces.size());
+        return;
+    }
+
+    size_t reg = 0;
+    u32 off = texTableOff;
+    for (u32 i = 0; i < texCnt && off + 0x40 <= jpcSize; ++i) {
+        const u32 entrySize = *reinterpret_cast<const BE(u32)*>(jpc + off + 4);
+        const char* texName = reinterpret_cast<const char*>(jpc + off + 0x0C);
+        const auto& s = surfaces[i];
+        const Gx2FormatMapping* m = s.baseData.empty() ? nullptr : findFormatMapping(s.format);
+        if (m != nullptr && std::strncmp(texName, "dummy", 5) != 0) {
+            auto* timg = reinterpret_cast<ResTIMG*>(jpc + off + 0x20);
+            const s32 stored = timg->imageOffset;    
+            const s32 imgOff = stored ? stored : 0x20;
+            applyTimgAttributes(timg, s, imgOff);
+            const void* pixelPtr = reinterpret_cast<const u8*>(timg) + imgOff;
+            registerHdSurface(*m, s, pixelPtr, jpcStem, i,  true);
+            ++reg;
+        }
+        off += entrySize ? entrySize : 0x40;
+    }
+    HdLog.info("registerHdParticle[{}]: {}/{} textures registered", jpcStem, reg, texCnt);
 }
 
 void set_hd_content_path(std::filesystem::path contentPath) {
