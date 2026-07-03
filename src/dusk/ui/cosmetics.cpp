@@ -1,6 +1,7 @@
 #include "cosmetics.hpp"
 
 #include "dusk/config.hpp"
+#include "dusk/cosmetics/midna_hair_color.hpp"
 #include "dusk/randomizer/generator/utility/string.hpp"
 #include "pane.hpp"
 #include "string_button.hpp"
@@ -45,7 +46,32 @@ static const auto masterSwordColors = std::unordered_map<std::string, std::strin
     {"30d0d0", "Cyan"},
 });
 
-void add_cosmetic_option(Pane& leftPane, Pane& rightPane, const char* key, ConfigVar<std::string>& option,
+// No custom hex colors for now
+static const auto midnaHairColors = std::unordered_map<std::string, std::string>({
+    {"Default", "Default"},
+    {"Pink", "Pink"},
+    {"Red", "Red"},
+    {"Yellow", "Yellow"},
+    {"Green", "Green"},
+    {"Blue", "Blue"},
+    {"Purple", "Purple"},
+    {"Brown", "Brown"},
+    {"White", "White"},
+});
+
+static const auto chargeRingColors = std::unordered_map<std::string, std::string>({
+   {"ff9f9f", "Pink"},
+   {"ff0000", "Red"},
+   {"ffff00", "Yellow"},
+   {"00ff00", "Green"},
+   {"0000ff", "Blue"},
+   {"ff00ff", "Purple"},
+   {"331900", "Brown"},
+   {"feffff", "White"},
+   {"000000", "Black"},
+});
+
+void add_cosmetic_option(Pane& leftPane, Pane& rightPane, const std::string& key, ConfigVar<std::string>& option,
                          const std::unordered_map<std::string, std::string>& colorPresets = defaultHexColors) {
     leftPane.register_control(leftPane.add_select_button({
         .key = key,
@@ -64,42 +90,47 @@ void add_cosmetic_option(Pane& leftPane, Pane& rightPane, const char* key, Confi
         pane.clear();
         pane.add_rml(fmt::format("Choose {}. Leave blank for default value. A reload or reboot may be required to see color changes ingame.", key));
 
-        pane.add_child<StringButton>(StringButton::Props{
-            .key = "Edit Hex Color",
-            .getValue = [&option] {
-                return option;
-            },
-            .setValue = [&option](Rml::String str) {
-                // Make lowercase
-                for (char& c : str) {
-                    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        if (!key.starts_with("Midna's Hair")) {
+            pane.add_child<StringButton>(StringButton::Props{
+                .key = "Edit Hex Color",
+                .getValue = [&option] {
+                    return option;
+                },
+                .setValue = [&option](Rml::String str) {
+                    // Make lowercase
+                    for (char& c : str) {
+                        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                    }
+
+                    option.setValue(str);
+                    config::Save();
+                },
+                .maxLength = 6,
+            });
+
+            pane.add_button(ControlledButton::Props{
+                .text = "Default",
+                .isSelected = [&option] {
+                    return option.getValue().empty();
                 }
-
-                option.setValue(str);
+            }).on_pressed([key, &option] {
+                option.setValue("");
+                if (key.starts_with("Midna's Hair")) {
+                    cosmetics::set_all_midna_hair_colors();
+                }
                 config::Save();
-            },
-            .maxLength = 6,
-        });
+            });
 
-        pane.add_button(ControlledButton::Props{
-            .text = "Default",
-            .isSelected = [&option] {
-                return option.getValue().empty();
-            }
-        }).on_pressed([&option] {
-            option.setValue("");
-            config::Save();
-        });
-
-        pane.add_button(ControlledButton::Props{
-            .text = "Random Color",
-        }).on_pressed([&option] {
-            std::random_device rd{};
-            std::uniform_int_distribution dist(0, 0xFFFFFF);
-            std::string hexStr = randomizer::utility::str::intToHex(dist(rd), false);
-            option.setValue(hexStr);
-            config::Save();
-        });
+            pane.add_button(ControlledButton::Props{
+                .text = "Random Color",
+            }).on_pressed([&option] {
+                std::random_device rd{};
+                std::uniform_int_distribution dist(0, 0xFFFFFF);
+                std::string hexStr = randomizer::utility::str::intToHex(dist(rd), 6, false);
+                option.setValue(hexStr);
+                config::Save();
+            });
+        }
 
         for (const auto& [hexStr, color] : colorPresets) {
             pane.add_button(ControlledButton::Props{
@@ -107,8 +138,11 @@ void add_cosmetic_option(Pane& leftPane, Pane& rightPane, const char* key, Confi
                 .isSelected = [hexStr, &option] {
                     return option.getValue() == hexStr;
                 },
-            }).on_pressed([hexStr, &option] {
+            }).on_pressed([key, hexStr, &option] {
                 option.setValue(hexStr);
+                if (key.starts_with("Midna's Hair")) {
+                    cosmetics::set_all_midna_hair_colors();
+                }
                 config::Save();
             });
         }
@@ -142,10 +176,13 @@ CosmeticsWindow::CosmeticsWindow() {
 
     });
 
-    add_tab("Misc. Colors", [this, &cosmetics](Rml::Element* content) {
+    add_tab("Misc Colors", [this, &cosmetics](Rml::Element* content) {
         auto& leftPane = add_child<Pane>(content, Pane::Type::Controlled);
         auto& rightPane = add_child<Pane>(content, Pane::Type::Controlled);
 
+        add_cosmetic_option(leftPane, rightPane, "Midna's Hair Base Color", cosmetics.midnaHairBaseColor, midnaHairColors);
+        add_cosmetic_option(leftPane, rightPane, "Midna's Hair Tips Color", cosmetics.midnaHairTipsColor, midnaHairColors);
+        add_cosmetic_option(leftPane, rightPane, "Midna Charge Ring Color", cosmetics.midnaChargeRingColor, chargeRingColors);
         add_cosmetic_option(leftPane, rightPane, "Link's Hair Color", cosmetics.linkHairColor);
         add_cosmetic_option(leftPane, rightPane, "Wolf Link Color", cosmetics.wolfLinkColor);
         add_cosmetic_option(leftPane, rightPane, "Epona Color", cosmetics.eponaColor);

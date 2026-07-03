@@ -49,6 +49,7 @@
 #include "SSystem/SComponent/c_API.h"
 #include "dusk/android_frame_rate.hpp"
 #include "dusk/app_info.hpp"
+#include "dusk/cosmetics/midna_hair_color.hpp"
 #include "dusk/crash_handler.h"
 #include "dusk/crash_reporting.h"
 #include "dusk/data.hpp"
@@ -664,6 +665,8 @@ int game_main(int argc, char* argv[]) {
     dusk::audio::SetMasterVolume(dusk::audio::MasterVolumeToLinear(dusk::getSettings().audio.masterVolume / 100.0f));
     dusk::audio::SetEnableReverb(dusk::getSettings().audio.enableReverb);
     dusk::audio::EnableHrtf = dusk::getSettings().audio.enableHrtf;
+
+    dusk::cosmetics::set_all_midna_hair_colors();
 
     // Run ImGui UI loop if Aurora couldn't initialize a backend
     if (auroraInfo.backend == BACKEND_NULL) {

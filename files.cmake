@@ -1556,6 +1556,8 @@ set(DUSK_FILES
         src/dusk/action_bindings.cpp
         src/dusk/cosmetics/color_utils.hpp
         src/dusk/cosmetics/color_utils.cpp
+        src/dusk/cosmetics/midna_hair_color.hpp
+        src/dusk/cosmetics/midna_hair_color.cpp
         src/dusk/cosmetics/texture_utils.hpp
         src/dusk/cosmetics/texture_utils.cpp
         # Randomizer files

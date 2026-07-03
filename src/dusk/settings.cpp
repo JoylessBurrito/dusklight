@@ -230,6 +230,9 @@ UserSettings g_userSettings = {
         .boomerangColor = {"cosmetics.boomerangColor", ""},
         .ironBootsColor = {"cosmetics.ironBootsColor", ""},
         .spinnerColor = {"cosmetics.spinnerColor", ""},
+        .midnaHairBaseColor = {"cosmetics.midnaHairBaseColor", "Default"},
+        .midnaHairTipsColor = {"cosmetics.midnaHairTipsColor", "Default"},
+        .midnaChargeRingColor = {"cosmetics.midnaChargeRingColor", ""},
         .linkHairColor = {"cosmetics.linkHairColor", ""},
         .wolfLinkColor = {"cosmetics.wolfLinkColor", ""},
         .eponaColor = {"cosmetics.eponaColor", ""},
@@ -424,6 +427,9 @@ void registerSettings() {
     Register(g_userSettings.cosmetics.boomerangColor);
     Register(g_userSettings.cosmetics.ironBootsColor);
     Register(g_userSettings.cosmetics.spinnerColor);
+    Register(g_userSettings.cosmetics.midnaHairBaseColor);
+    Register(g_userSettings.cosmetics.midnaHairTipsColor);
+    Register(g_userSettings.cosmetics.midnaChargeRingColor);
     Register(g_userSettings.cosmetics.linkHairColor);
     Register(g_userSettings.cosmetics.wolfLinkColor);
     Register(g_userSettings.cosmetics.eponaColor);

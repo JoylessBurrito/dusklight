@@ -3917,6 +3917,10 @@ public:
     u16 getEventId() { return mMsgFlow.getEventId(); }
 
     bool checkSwimming() {return checkModeFlg(MODE_SWIMMING);}
+
+    BE<short>** getDomeLockChromaTable() {
+        return &field_0x0724->mAnmCRegDataR;
+    }
 #endif
 
     static daAlink_BckData const m_mainBckShield[20];

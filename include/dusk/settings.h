@@ -329,6 +329,9 @@ struct UserSettings {
         ConfigVar<std::string> boomerangColor;
         ConfigVar<std::string> ironBootsColor;
         ConfigVar<std::string> spinnerColor;
+        ConfigVar<std::string> midnaHairBaseColor;
+        ConfigVar<std::string> midnaHairTipsColor;
+        ConfigVar<std::string> midnaChargeRingColor;
         ConfigVar<std::string> linkHairColor;
         ConfigVar<std::string> wolfLinkColor;
         ConfigVar<std::string> eponaColor;
